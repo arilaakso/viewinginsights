@@ -50,15 +50,16 @@ YouTube logs videos watched even if you don't watch them till the end. Therefore
   - Pull the data from GitHub using `git clone http://github.com/arilaakso/viewinginsights.git`
   - Open the folder in VSCode
   - Create and activate a virtual environment:
-    - `python3 -m venv venv`
+    - `python -m venv venv`
     - `venv\Scripts\activate`
   - Install the required libraries:
     - `pip install -r requirements.txt`
-
-## START THE APP from `main.py`
+  - Rename `.env_template` to `.env` and add your OpenAI API key.
+  - Make sure you have `credentials.json` in the app folder.
   - You can test it with the `watch-history.json` file included in the repo.
-  - When you run the app the first time, you need to authenticate for Google API as 
-    mentioned in prerequisites.
+  
+## START THE APP from `main.py`
+  - When you run the app the first time, you need to authenticate for Google API as mentioned in prerequisites.
   - The app should:
     - Convert the JSON file into CSV.
     - Create an SQLite database, insert the CSV data.
