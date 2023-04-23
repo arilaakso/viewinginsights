@@ -33,6 +33,7 @@ YouTube logs videos watched even if you don't watch them till the end. Therefore
     - It creates a `token.json` file in the app folder. It should be valid at least a few weeks.
 
 3. **OpenAI API key**
+  - App asks names/keywords for categories from OpenAI's LLM. 
   - Create an account at https://openai.com/
   - You need to add credit card details but you may get free credits for $20(?) valid for a month.
   - Asking names or keywords with this app for 20 categories may cost around $0.01.
