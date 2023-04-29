@@ -1,15 +1,16 @@
+import logging
 import os
 from datetime import date
+
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from tqdm import tqdm
-import logging
 
 logger = logging.getLogger("app_logger")
 
 # YouTube API has a quota of 10,000 units per day, you may want to check that everything works before consuming it all.
-MAX_RESULTS = 10 
+MAX_RESULTS = 10
 
 def get_youtube_client():
     
@@ -20,7 +21,7 @@ def get_youtube_client():
     else:
         flow = InstalledAppFlow.from_client_secrets_file("credentials.json", ["https://www.googleapis.com/auth/youtube.force-ssl"])
         creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
+        with open("token.json", "w", encoding="UTF-8") as token:
             token.write(creds.to_json())
 
     # Set up the YouTube API client
@@ -33,10 +34,11 @@ def get_youtube_client():
 # The method can be run multiple times, it will only update the channels that are missing some information.
 def save_channel_details(youtube, conn, c):
     
-    c.execute("SELECT id, url FROM channel WHERE description IS NULL AND is_deleted IS NOT TRUE LIMIT " + str(MAX_RESULTS))
+    c.execute("SELECT id, url FROM channel WHERE description IS NULL LIMIT " + str(MAX_RESULTS))
     channels = c.fetchall()
 
     total_channels = 0
+    deleted_channels = 0
     for channel in tqdm(channels):
         db_id = channel[0]
         channel_url = channel[1]
@@ -49,9 +51,10 @@ def save_channel_details(youtube, conn, c):
                 id=channel_id
             ).execute()
 
-            # If channel is not found from YouTube, mark it as deleted in the DB.
+            # If channel is not found from YouTube, delete it.
             if response is None or response.get("items") is None or len(response["items"]) == 0:
-                c.execute("UPDATE channel SET is_deleted = TRUE WHERE id = ?", (db_id,))
+                c.execute("DELETE FROM channel WHERE id = ?", (db_id,))
+                deleted_channels += 1
                 conn.commit()
                 continue
             
@@ -74,10 +77,13 @@ def save_channel_details(youtube, conn, c):
             
     logger.info(f"Updated {total_channels} channels from YouTube API")
     
-    c.execute("SELECT COUNT(id) FROM channel WHERE description IS NULL AND is_deleted IS NOT TRUE")
+    c.execute("SELECT COUNT(id) FROM channel WHERE description IS NULL")
    
     count = c.fetchone()[0]
     
+    if deleted_channels > 0:
+        logger.info(f"Deleted {deleted_channels} unavailable channels from DB")
+        
     if count > 0:
         logger.info(f"Channels not yet updated: {count}")
 
@@ -106,7 +112,7 @@ def save_video_details(youtube, conn, c):
     
     # If video length is available, the data has already been retrieved.
     # You can play with the LIMIT value when debugging.
-    c.execute("SELECT id, url FROM video WHERE length IS NULL AND is_deleted IS NULL LIMIT " + str(MAX_RESULTS))
+    c.execute("SELECT id, url FROM video WHERE length IS NULL LIMIT " + str(MAX_RESULTS))
     
     videos = c.fetchall()
 
@@ -125,7 +131,7 @@ def save_video_details(youtube, conn, c):
             # If video is not available in YouTube anymore, mark it as such in the DB.
             if response is None or len(response["items"]) == 0:
                 deleted_videos += 1
-                c.execute("UPDATE video SET is_deleted = TRUE WHERE id = ?", (video_id,))
+                c.execute("DELETE FROM video WHERE id = ?", (video_id,))
                 conn.commit()
                 continue
             
@@ -161,7 +167,7 @@ def save_video_details(youtube, conn, c):
     
     logger.info(f"Updated {total_videos} videos from YouTube API")
 
-    c.execute("SELECT COUNT(id) FROM video WHERE length IS NULL AND is_deleted IS NOT TRUE")
+    c.execute("SELECT COUNT(id) FROM video WHERE length IS NULL")
     
     count = c.fetchone()[0]
     
@@ -211,8 +217,8 @@ def parse_duration(duration_raw):
 
         time_formatted = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         return time_formatted
-    except:
-        return "10:00" #P54DT22H32M59S!? Some months long streams?
+    except ValueError:
+        return "10:00" #P54DT22H32M59S!? Days long streams?
     
 
 #convert 4:27:46 time format into seconds

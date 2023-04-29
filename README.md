@@ -3,11 +3,12 @@
 You can download your YouTube watching history from Google in JSON format.
 The app categories the data and stores it in an SQLite database for further analysis.
 
-This first version only categorizes and cleans the data. Data visualisation may be added later.
+This first version only categorizes and cleans the data. Some example statistics are plotted in Jupyter notebooks in 'plots' folder.
 I have tested this with only my own data, and some tweaking may be needed to make it work with yours. Let me know if you have any issues.
 
 ## KNOWN LIMITATIONS
-YouTube logs videos watched even if you don't watch them till the end. Therefore, total durations, and other statistics are affected by that. I don't think there is a good workaround for it.
+- YouTube logs videos watched soon after you have started watching it. Therefore, calculating total watch time is not really realistic. I don't think there is a good workaround for it.
+
 
 ## PREREQUISITES
 1. **YouTube `watch-history.json` file from Google Takeout**
@@ -96,6 +97,7 @@ STEP 4: Find suitable keywords for videos and channels.
 
 STEP 5, Dividing channels into categories. You have two options:
 DYNAMIC CATEGORY OPTION
+ - This does not provide good results but it's automatic.
  - The code uses KMeans clustering to find out how many categories would be optimal. It does a decent job but may not be what you wanted.
  - Then it creates a recommended amount of categories into DB.
  - Next, it finds the best keywords to describe the category using keywords from channels the belong to that category.
@@ -107,14 +109,14 @@ DYNAMIC CATEGORY OPTION
    - Adjusting the keyword count in the code.
 
 If you want to have more control over the categories, you can do it manually with
-FIXED CATEGORY OPTION
- - Define fixed categories at the beginning of the `fixed_clustering.py` file.
- - You can first define only category names, run it, and see how well the code categorizes the channels.
+FIXED CATEGORY OPTION (recommended)
+ - Define fixed categories at the beginning of the `fixed_clustering.py` file in `FIXED_CHANNEL_CATEGORIES`.
+ - `In KEYWORD_CATEGORY_MAP` keywords are used if the channel is not yet mapped to any category. 
  - It calls OpenAI API to get possible keywords based on the category name.
- - Then it compares those keywords to channels' keywords and finds the best match using cosine similarity.
- - You check the results by executing `show_most_watched_categories()` method in the end. 
-   If some channels are in a wrong category, you can fix it by defining it in the `FIXED_CHANNEL_CATEGORIES` structure. 
-   That may require 10-100 iterations, depends on how perfect you want to be.
+ - The code uses fixed categories as a training material for categorizing the rest.
+ - You check the results by executing `show_most_watched_categories()` method in the end.  
+   Getting the categorization right may require 10-100 reruns, depending on how perfect you want it to be.
+ - You can cache OpenAI results if needed.
 
 All comments and improvements are welcomed!
 

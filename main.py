@@ -1,16 +1,22 @@
 import os
 import sqlite3
+
 from convert_json_into_csv import convert_json_into_csv
 from create_database import create_database
-from fixed_clustering import get_category_keywords_from_openai_api, select_category_for_remaining_channels, set_fixed_categories
-from import_data_into_db import delete_extra_long_videos, insert_data_into_database
-from sql_queries import show_most_watched_categories, show_most_watched_channels
-from update_keywords import update_channel_keywords, update_video_keywords
-from dynamic_clustering import find_optimal_cluster_size, get_category_names_from_openai, update_category_keywords, clusterize
-from youtube_api import save_channel_details
-from youtube_api import save_video_details
-from youtube_api import get_youtube_client
+from dynamic_clustering import (clusterize, find_optimal_cluster_size,
+                                get_category_names_from_openai,
+                                update_category_keywords)
+from fixed_clustering import (categorize_remaining_channels,
+                              get_category_keywords_from_openai_api,
+                              set_fixed_categories)
+from import_data_into_db import (delete_extra_long_videos, delete_orphans,
+                                 insert_data_into_database)
 from logger_setup import setup_logger
+from sql_queries import (show_most_watched_categories,
+                         show_most_watched_channels)
+from update_keywords import update_channel_keywords, update_video_keywords
+from youtube_api import (get_youtube_client, save_channel_details,
+                         save_video_details)
 
 logger = setup_logger()
 
@@ -36,6 +42,7 @@ def main():
     create_database(conn, c)
     insert_data_into_database(conn, c)
     delete_extra_long_videos(conn, c, max_length=4)
+    delete_orphans(conn, c)
     #============================================================
     
     
@@ -66,18 +73,16 @@ def main():
     get_category_names_from_openai(conn, c)
     #=============================================================
     
-    '''
     #==========================================================
     # STEP 5 FIXED CATEGORIZATION
     # If you are not happy with the dynamically created 
     # categories, you can define them manually.
     #=============================================================
-    set_fixed_categories(conn, c)
-    get_category_keywords_from_openai_api(conn, c)
-    select_category_for_remaining_channels(conn, c)
+    #set_fixed_categories(conn, c)
+    #get_category_keywords_from_openai_api(conn, c)    
+    #categorize_remaining_channels(conn, c)
     #==========================================================
-    '''
-
+    
     show_most_watched_categories(conn)
     show_most_watched_channels(conn)
     
@@ -86,3 +91,4 @@ def main():
     
 if __name__ == "__main__":
     main()
+    

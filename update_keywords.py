@@ -1,6 +1,7 @@
 import logging
 import re
 import string
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -12,7 +13,7 @@ logger = logging.getLogger("app_logger")
 # Ramdom keywords to be excluded, not very useful in categorization.
 CUSTOM_STOP_WORDS = "best,better,breaking,care,center,channel,check,clip,comment,contact,content,day,dont,\
 drone,dw,el,email,en,enjoy,et,facebook,follow,free,gm,guy,help,hope,im,improve,inquiry,instagram,\
-know,latest,life,like,live,look,los,love,medium,model,new,news,performance,official youtube,official,\
+know,latest,life,like,line,live,look,los,love,medium,model,new,news,performance,official youtube,official,\
 online,youtube,channel,people,place,product,que,scene,service,short,start,state,subscribe,subscriber,\
 support,thanks,thing,tiktok,time,topic,tv,twitter,u,use,video,videos,want,watch,\
 welcome,world,year,youtube,youtube channel"
@@ -27,8 +28,7 @@ CUSTOM_STOPWORDS = CUSTOM_STOP_WORDS.split(",") # For easier modification above.
 
 # Updates video.keywords from title and description fields.
 def update_video_keywords(conn, c, batch_size=1000):
-    c.execute("""SELECT id, title, description, tags FROM video WHERE is_deleted IS NULL 
-                 AND (title IS NOT NULL OR description IS NOT NULL)""")
+    c.execute("""SELECT id, title, description, tags FROM video WHERE title IS NOT NULL OR description IS NOT NULL""")
     videos = c.fetchall()
 
     # Use parameterized queries
@@ -97,7 +97,6 @@ def tokenize_text(text):
 def update_channel_keywords(conn, c):
     c.execute("""SELECT c.id, GROUP_CONCAT(v.keywords, ' ') AS all_video_keywords 
                  FROM channel c LEFT JOIN video v ON c.id = v.channel_id 
-                 WHERE c.is_deleted IS NULL AND v.is_deleted IS NULL 
                  GROUP BY c.id""")
     channel_data = c.fetchall()
 
@@ -108,9 +107,13 @@ def update_channel_keywords(conn, c):
     for channel in tqdm(channel_data):
         channel_id = channel[0]
         all_video_keywords = channel[1]
-
+        
+        if all_video_keywords is None:
+            logger.info("Channel %s has no videos", channel_id)
+            continue
+        
         # Get top keywords collected from all videos of the channel
-        top_words = extract_top_keywords(all_video_keywords, max_keywords=25)
+        top_words = extract_top_keywords(all_video_keywords, max_keywords=7)
 
         # Use a parameterized query to update the channel keywords
         c.execute(update_query, (top_words, channel_id))
@@ -119,11 +122,11 @@ def update_channel_keywords(conn, c):
 
     conn.commit()
 
-    logger.info(f"Updated keywords for {total_rows_affected} channels")
+    logger.info("Updated keywords for %d channels", total_rows_affected)
 
 
 # Extracts most frequent words from the given text.
-def extract_top_keywords(text, max_keywords=25):
+def extract_top_keywords(text, max_keywords=10):
     
     # Remove punctuation and convert to lowercase.
     text = re.sub(r"[^\w\s]", "", text).lower()

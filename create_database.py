@@ -32,7 +32,8 @@ def create_category_table(c):
                     id INTEGER PRIMARY KEY,
                     cluster_number INTEGER,
                     name TEXT,
-                    keywords TEXT
+                    keywords TEXT,
+                    cached_keywords TEXT
                 )""")
 
 
@@ -43,7 +44,6 @@ def create_channel_table(c):
                     url TEXT,
                     description TEXT,
                     keywords TEXT,
-                    is_deleted BOOLEAN,
                     category_id INTEGER,
                     FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
                 )""")
@@ -60,7 +60,6 @@ def create_video_table(c):
                     tags TEXT,
                     keywords TEXT,
                     published_at DATETIME,
-                    is_deleted BOOLEAN,
                     FOREIGN KEY (channel_id) REFERENCES channel(id) ON DELETE CASCADE
                 )""")
 
@@ -97,3 +96,4 @@ def create_activity_table(c):
                     FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE,
                     FOREIGN KEY (channel_id) REFERENCES channel(id) ON DELETE CASCADE
                 )""")
+    

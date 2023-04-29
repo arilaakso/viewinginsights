@@ -2,7 +2,6 @@
 
 import logging
 import os
-from matplotlib import pyplot as plt
 
 import openai
 from sklearn.cluster import KMeans
@@ -64,7 +63,7 @@ def clusterize(conn, c, cluster_count):
     c.execute("DELETE FROM category")
     
     # get all keywords from all channels
-    c.execute("SELECT id, keywords FROM channel WHERE is_deleted IS NULL AND keywords IS NOT NULL")
+    c.execute("SELECT id, keywords FROM channel WHERE keywords IS NOT NULL")
 
     # Fetch all the channel ids and keywords as a list of tuples
     ids_and_keywords = c.fetchall()
@@ -118,12 +117,10 @@ def clusterize(conn, c, cluster_count):
 def find_optimal_cluster_size(c, k_max):
     c.execute("""SELECT id, keywords
              FROM channel 
-             WHERE is_deleted IS NULL 
-             AND keywords IS NOT NULL""")
+             WHERE keywords IS NOT NULL""")
 
     ids_and_words = c.fetchall()
 
-    ids = [row[0] for row in ids_and_words]
     words = [row[1] for row in ids_and_words]
 
     vectorizer = TfidfVectorizer()
@@ -142,14 +139,6 @@ def find_optimal_cluster_size(c, k_max):
     diff = [inertias[i] - inertias[i-1] for i in range(1, len(inertias))]
     elbow_index = diff.index(max(diff)) + 1
 
-    # You can plot the elbow curve on the screen to find optimal number of clusters
-    '''
-    plt.plot(range(1, k_max+1), inertias)
-    plt.xlabel("Number of clusters")
-    plt.ylabel("Inertia")
-    plt.title("Elbow Curve")
-    plt.show()
-    '''
     logger.info(f"Optimal cluster size calculated to be {elbow_index} (max limit was {k_max})")
     
     return elbow_index
@@ -160,7 +149,7 @@ def get_category_names_from_openai(conn, c):
 
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    c.execute(f"SELECT id, keywords FROM category")
+    c.execute("SELECT id, keywords FROM category")
     categories = c.fetchall()
     
     for row in tqdm(categories):

@@ -78,8 +78,8 @@ def insert_data_into_database(conn, c):
         conn.commit()
         
         logger.info(f"Actions inserted: {inserted_actions}")
-        logger.info(f"unique videos inserted: {inserted_videos}")
-        logger.info(f"unique channels inserted: {inserted_channels}")
+        logger.info(f"Unique videos inserted: {inserted_videos}")
+        logger.info(f"Unique channels inserted: {inserted_channels}")
 
         if skipped_videos > 0:
             logger.info(f"{skipped_videos} videos skipped because channels were defined as excluded")
@@ -92,24 +92,40 @@ def delete_extra_long_videos(conn, c, max_length=4):
     excluded_condition = ''
     
     if IMPORTANT_CHANNELS:
-        excluded_condition = ' AND channel.name NOT IN ({})'.format(','.join('?' for _ in IMPORTANT_CHANNELS))
-    
-    query = """
-        UPDATE video
-        SET is_deleted = 1
+        excluded_condition = f"AND channel.name NOT IN ({','.join('?' for _ in IMPORTANT_CHANNELS)})"
+    else:
+        excluded_condition = ''
+
+    query = f"""
+        DELETE FROM video
         WHERE id IN (
             SELECT video.id
             FROM video
-            JOIN channel ON video.channel_id = channel.id AND channel.is_deleted IS NULL
+            JOIN channel ON video.channel_id = channel.id
             WHERE video.length > ?
-            AND video.is_deleted IS NULL
-            {0}
-            ORDER BY video.length DESC
-        )
-    """.format(excluded_condition)
- 
+            {excluded_condition}
+            ORDER BY video.length DESC)
+    """
+
     c.execute(query, [min_length] + IMPORTANT_CHANNELS)
     conn.commit()
     
-    if (c.rowcount > 0):
-        logger.info(f"Marked {c.rowcount} extra long videos as deleted.")
+    if c.rowcount > 0:
+        logger.info(f"Deleted {c.rowcount} extra long videos.")
+
+
+# Delete channels that have no videos and vice versa.
+def delete_orphans(conn, c):
+    
+    c.execute("DELETE FROM channel WHERE id NOT IN (SELECT DISTINCT channel_id FROM video)")
+    
+    rowcount = c.rowcount
+    
+    c.execute("DELETE FROM activity WHERE channel_id NOT IN (SELECT id FROM channel)")
+    c.execute("DELETE FROM video WHERE channel_id NOT IN (SELECT id FROM channel)")
+    c.execute("DELETE FROM video_stat WHERE video_id NOT IN (SELECT id FROM video)")
+    c.execute("DELETE FROM channel_stat WHERE channel_id NOT IN (SELECT id FROM channel)")
+    conn.commit()
+    
+    if rowcount > 0:
+        logger.info(f"Deleted {c.rowcount} empty channels.")
