@@ -3,8 +3,8 @@
 You can download your YouTube watching history from Google in JSON format.
 The app categories the data and stores it in an SQLite database for further analysis.
 
-This first version only categorizes and cleans the data. Some example statistics are plotted in Jupyter notebooks in 'plots' folder.
-I have tested this with only my own data, and some tweaking may be needed to make it work with yours. Let me know if you have any issues.
+Some graphs are plotted in Jupyter notebooks in 'plots' folder.
+I have tested this with only my own data, and some tweaking may be needed to make it work with yours. 
 
 ## KNOWN LIMITATIONS
 - YouTube logs videos watched soon after you have started watching it. Calculating total watch time from that data is not really realistic. I don't think there is a good workaround for it.
@@ -58,11 +58,11 @@ I have tested this with only my own data, and some tweaking may be needed to mak
     - `pip install -r requirements.txt`
   - Rename `.env_template` to `.env` and add your OpenAI API key.
   - Make sure you have `credentials.json` in the app folder.
-  - You can test it with the `watch-history.json` file included in the repo.
+  - You can test the app with the `watch-history.json` file included in the repo.
   
 ## START THE APP from `main.py`
   - When you run the app the first time, you need to authenticate for Google API as mentioned in prerequisites.
-  - The app should:
+  - By default, the app should:
     - Convert the JSON file into CSV.
     - Create an SQLite database, insert the CSV data.
     - Retrieve video and channel details from YouTube API.
@@ -80,18 +80,17 @@ STEP 1: Convert JSON file into CSV.
  - The data could be inserted directly from JSON into DB, but for debugging purposes, CSV is nice format have.
 
 STEP 2: Create an SQLite database and import the data.
- - The app creates additional tables like `video_stat` and `channel_stat` which are planned to use later. Statistics data is available when we call the YouTube API anyway, so why not store the data for the future. 
+ - The app creates additional tables like `video_stat` and `channel_stat` which are planned to use later. Statistics data is available when the YouTube API is called anyway, so why not store the data for the future. 
 - In the `csv_data_into_db.py` file with `CHANNELS_NOT_TO_IMPORT` and `IMPORTANT_CHANNELS`, you can streer the import process. Youtube has streaming channels and other crazy long videos which may alter the watching stats. You can delete extra long videos with a `max_length` parameter.
 
 STEP 3: Retrieve video and channel details from YouTube API.
  - The first time when you run the code, you need to authenticate with your Google account in a browser, see prerequisites.
  - In this step, the code browses through all channels from the DB and retrieves details from YouTube API.
- - After channels are done, the code browses through all videos. 
  - NOTE! The YouTube API has a daily quota limit of 10 000 requests. You may have to retrieve the data over a few days. Use `MAX_RESULTS` parameter for limiting the requests when testing. The code avoids retrieving the same data twice.
  - View counts, like counts, comment counts and video counts are also stored for future analysis.
 
 STEP 4: Find suitable keywords for videos and channels.
- - The code collects keywords for videos from the title and description fields. I tried a few different approaches, not sure which one is the best.
+ - The code collects keywords for videos from the title and description fields. 
  - For channel keywords, it first combines all channel's video keywords together and picks the most common ones.
  - You can rerun this step multiple times and exclude some words by adding them in `update_keywords.by` file's `CUSTOM_STOP_WORDS` list.
 
@@ -99,7 +98,6 @@ STEP 5, Dividing channels into categories. You have two options:
 DYNAMIC CATEGORY OPTION
  - This does not provide good results but it's automatic.
  - The code uses KMeans clustering to find out how many categories would be optimal. It does a decent job but may not be what you wanted.
- - Then it creates a recommended amount of categories into DB.
  - Next, it finds the best keywords to describe the category using keywords from channels the belong to that category.
  - Lastly, it asks from OpenAI API names for the categories based on the keywords.
  - This way, using the API won't get too expensive, getting all 10-20 category names will cost maybe $0.01.
@@ -110,15 +108,13 @@ DYNAMIC CATEGORY OPTION
 
 If you want to have more control over the categories, you can do it manually with
 FIXED CATEGORY OPTION (recommended)
- - Define fixed categories at the beginning of the `fixed_clustering.py` file in `FIXED_CHANNEL_CATEGORIES`.
- - `In KEYWORD_CATEGORY_MAP` keywords are used if the channel is not yet mapped to any category. 
- - It calls OpenAI API to get possible keywords based on the category name.
- - The code uses fixed categories as a training material for categorizing the rest.
+ - Define fixed categories and some channels at the beginning of the `fixed_clustering.py` file in `FIXED_CHANNEL_CATEGORIES`.
+ - `In KEYWORD_CATEGORY_MAP` keywords are used for the channels that are not yet mapped to any category. 
+ - It calls OpenAI API to get keywords based on the category name.
+ - The code uses fixed categories as a training material for categorizing the remaining channels.
  - You check the results by executing `show_most_watched_categories()` method in the end, although I recommend using SQLite-web app or similar for querying the data.
    Getting the categorization right may require 10-100 reruns, depending on how perfect you want it to be.
- - You can cache OpenAI results if you get tired of waiting for the API.
-
-All comments and improvements are welcomed!
+ - You can cache OpenAI results with `read_from_cache` parameter if you get tired of waiting for the API.
 
 Some examples from the data:
 
