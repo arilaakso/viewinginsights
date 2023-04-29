@@ -125,3 +125,9 @@ Some examples from the data (more analysis and visualizations to come):
 ![Most watched channels](images/most_watched_channels.png?raw=true)
 
 ![Most watched categories](images/most_watched_categories.png?raw=true)
+
+[Views by weekday hours](images/views_by_weekday_hours.png?raw=true)
+
+![Views by hour](images/views_by_hour.png?raw=true)
+
+![Video lengths and counts](images/video_lengths_and_counts.png?raw=true)
