@@ -7,7 +7,7 @@ This first version only categorizes and cleans the data. Some example statistics
 I have tested this with only my own data, and some tweaking may be needed to make it work with yours. Let me know if you have any issues.
 
 ## KNOWN LIMITATIONS
-- YouTube logs videos watched soon after you have started watching it. Therefore, calculating total watch time is not really realistic. I don't think there is a good workaround for it.
+- YouTube logs videos watched soon after you have started watching it. Calculating total watch time from that data is not really realistic. I don't think there is a good workaround for it.
 
 
 ## PREREQUISITES
@@ -114,13 +114,13 @@ FIXED CATEGORY OPTION (recommended)
  - `In KEYWORD_CATEGORY_MAP` keywords are used if the channel is not yet mapped to any category. 
  - It calls OpenAI API to get possible keywords based on the category name.
  - The code uses fixed categories as a training material for categorizing the rest.
- - You check the results by executing `show_most_watched_categories()` method in the end.  
+ - You check the results by executing `show_most_watched_categories()` method in the end, although I recommend using SQLite-web app or similar for querying the data.
    Getting the categorization right may require 10-100 reruns, depending on how perfect you want it to be.
- - You can cache OpenAI results if needed.
+ - You can cache OpenAI results if you get tired of waiting for the API.
 
 All comments and improvements are welcomed!
 
-Some examples from the data (more analysis and visualizations to come):
+Some examples from the data:
 
 ![Views by weekday hours](images/views_by_weekday_hours.png?raw=true)
 
