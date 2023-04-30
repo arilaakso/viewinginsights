@@ -2,8 +2,6 @@ import logging
 import os
 from datetime import date
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from tqdm import tqdm
 
@@ -12,20 +10,11 @@ logger = logging.getLogger("app_logger")
 # YouTube API has a quota of 10,000 units per day, you may want to check that everything works before consuming it all.
 MAX_RESULTS = 10
 
+
 def get_youtube_client():
     
-    # Set up the OAuth2.0 credentials
-    creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", ["https://www.googleapis.com/auth/youtube.force-ssl"])
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", ["https://www.googleapis.com/auth/youtube.force-ssl"])
-        creds = flow.run_local_server(port=0)
-        with open("token.json", "w", encoding="UTF-8") as token:
-            token.write(creds.to_json())
-
-    # Set up the YouTube API client
-    youtube = build("youtube", "v3", credentials=creds)
+    api_key = os.getenv("GOOGLE_API_KEY")
+    youtube = build("youtube", "v3", developerKey=api_key)
     
     return youtube
 

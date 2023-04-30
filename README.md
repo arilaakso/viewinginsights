@@ -23,15 +23,8 @@ I have tested this with only my own data, and some tweaking may be needed to mak
 2. **Google API key**
   - Create a new project in Google Cloud Platform: https://console.cloud.google.com/
   - Go to your project page and click "+CREATE CREDENTIALS".
-  - Select OAuth client ID.
-  - Select Application Type as Desktop app.
-  - Select any name and click Create.
-  - From the popup window that opens, click Download JSON. Close the window.
-  - Take the JSON file you downloaded, rename it to `credentials.json` and place it in the app folder.
-  - When you start the app, and the Youtube client object is created for the first time, the browser opens. 
-    - In the browser, select your Google account and click Continue (not "Back to safety"). 
-    - Grant access for your account to your newly created app.
-    - It creates a `token.json` file in the app folder. It should be valid at least a few weeks.
+  - Under "Create credentials", select "API key" and then click "Create".
+  - Copy the newly created API key.
 
 3. **OpenAI API key**
   - App asks names/keywords for categories from OpenAI's LLM. 
@@ -61,7 +54,6 @@ I have tested this with only my own data, and some tweaking may be needed to mak
   - You can test the app with the `watch-history.json` file included in the repo.
   
 ## START THE APP from `main.py`
-  - When you run the app the first time, you need to authenticate for Google API as mentioned in prerequisites.
   - By default, the app should:
     - Convert the JSON file into CSV.
     - Create an SQLite database, insert the CSV data.
@@ -84,8 +76,7 @@ STEP 2: Create an SQLite database and import the data.
 - In the `csv_data_into_db.py` file with `CHANNELS_NOT_TO_IMPORT` and `IMPORTANT_CHANNELS`, you can streer the import process. Youtube has streaming channels and other crazy long videos which may alter the watching stats. You can delete extra long videos with a `max_length` parameter.
 
 STEP 3: Retrieve video and channel details from YouTube API.
- - The first time when you run the code, you need to authenticate with your Google account in a browser, see prerequisites.
- - In this step, the code browses through all channels from the DB and retrieves details from YouTube API.
+ - The code browses through all channels from the DB and retrieves details from YouTube API.
  - NOTE! The YouTube API has a daily quota limit of 10 000 requests. You may have to retrieve the data over a few days. Use `MAX_RESULTS` parameter for limiting the requests when testing. The code avoids retrieving the same data twice.
  - View counts, like counts, comment counts and video counts are also stored for future analysis.
 
