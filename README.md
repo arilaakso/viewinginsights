@@ -49,8 +49,7 @@ I have tested this with only my own data, and some tweaking may be needed to mak
     - `venv\Scripts\activate`
   - Install the required libraries:
     - `pip install -r requirements.txt`
-  - Rename `.env_template` to `.env` and add your OpenAI API key.
-  - Make sure you have `credentials.json` in the app folder.
+  - Rename `.env_template` to `.env` and add your OpenAI API and GOOGLE API keys.
   - You can test the app with the `watch-history.json` file included in the repo.
   
 ## START THE APP from `main.py`
