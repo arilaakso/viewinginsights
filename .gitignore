@@ -5,7 +5,5 @@ venv/
 .vscode/
 .env
 app.log
-credentials.json
-token.json
 youtube_data.db
 watch-history.csv
